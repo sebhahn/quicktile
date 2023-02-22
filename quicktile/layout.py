@@ -60,13 +60,6 @@ def resolve_fractional_geom(fract_geom: Union[PercentRectTuple, Rectangle],
     if isinstance(fract_geom, Rectangle):
         return fract_geom
     else:
-        # print("----")
-        # print(f"{monitor_rect.width}  {monitor_rect.height}")
-        # print(f"{fract_geom[0]} {fract_geom[1]} {fract_geom[2]} {fract_geom[3]}")
-        # print(f"x={fract_geom[0] * monitor_rect.width} y={fract_geom[1] * monitor_rect.height}")
-        # print(f"width={fract_geom[2] * monitor_rect.width} height={fract_geom[3] * monitor_rect.height}")
-        # print("----")
-
         return Rectangle(
             x=fract_geom[0] * monitor_rect.width,
             y=fract_geom[1] * monitor_rect.height,
@@ -163,10 +156,15 @@ def make_winsplit_positions(columns: int) -> Dict[str, List[PercentRectTuple]]:
         file and figure out how to generalize :func:`make_winsplit_positions`
         into user-customizable stuff as much as possible.
     """
-
     gvlay = GravityLayout()
     col_width = 1.0 / columns
-    cycle_steps_center = tuple(round(col_width * x, 2) + 0.01
+
+    if columns == 3:
+        offset = 0.01
+    else:
+        offset = 0
+
+    cycle_steps_center = tuple(round(col_width * x, 2) + offset
                         for x in range(1, columns))
 
     cycle_steps_edge = tuple(round(col_width * x, 2)
