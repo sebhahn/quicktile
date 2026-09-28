@@ -58,6 +58,44 @@ from typing import Optional  # NOQA pylint: disable=unused-import
 
 __version__ = files("quicktile").joinpath("VERSION").read_text()
 
+
+def parse_column_counts(config):
+    """Return the list of column counts to tile by.
+
+    Prefers the optional comma-separated ``ColumnCounts`` option so that a
+    single quicktile instance can tile across multiple layouts at once
+    (e.g. ``ColumnCounts = 3,4``).  Falls back to the single ``ColumnCount``
+    value for backward compatibility.
+    """
+    if config.has_option('general', 'ColumnCounts'):
+        parsed = [int(x.strip()) for x in
+                  config.get('general', 'ColumnCounts').split(',') if x.strip()]
+        if parsed:
+            return parsed
+    return [config.getint('general', 'ColumnCount')]
+
+
+def make_multi_winsplit(column_counts, margin_x, margin_y):
+    """Merge the WinSplit tiling presets from several column counts into one
+    command set.
+
+    Each command's cycle list becomes the union of the positions from every
+    given column count (deduplicated and sorted by size), so e.g. ``left`` /
+    ``right`` will step across quarters *and* thirds in a single command
+    rather than being locked into one layout.
+    """
+    merged: Dict[str, list] = {}
+    for count in column_counts:
+        for name, positions in layout.make_winsplit_positions(
+                count, margin_x, margin_y).items():
+            for rect in positions:
+                if name not in merged:
+                    merged[name] = []
+                if rect not in merged[name]:
+                    merged[name].append(rect)
+    return {name: sorted(positions, key=lambda r: r[2] + r[3])
+            for name, positions in merged.items()}
+
 Wnck.set_client_type(Wnck.ClientType.PAGER)
 
 
@@ -208,8 +246,8 @@ def main() -> None:
     config = load_config(cfg_path)
 
     commands.cycle_dimensions = commands.commands.add_many(
-        layout.make_winsplit_positions(
-            config.getint('general', 'ColumnCount'),
+        make_multi_winsplit(
+            parse_column_counts(config),
             config.getfloat('general', 'MarginX_Percent') / 100,
             config.getfloat('general', 'MarginY_Percent') / 100
         )
