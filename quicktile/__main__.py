@@ -33,7 +33,7 @@ __license__ = "GNU GPL 2.0 or later"
 # pylint: disable=unsubscriptable-object
 # pylint: disable=wrong-import-order
 
-import errno, logging, os, signal, sys
+import errno, logging, os, platform, signal, sys
 from argparse import ArgumentParser
 from importlib.resources import files
 
@@ -56,7 +56,7 @@ from typing import Dict
 from typing import Optional  # NOQA pylint: disable=unused-import
 # --
 
-__version__ = files("quicktile").joinpath("VERSION").read_text()
+__version__ = files("quicktile").joinpath("VERSION").read_text().strip()
 
 
 def parse_column_counts(config):
@@ -192,7 +192,7 @@ def argparser() -> ArgumentParser:
         `sphinxcontrib.autoprogram
         <https://sphinxcontrib-autoprogram.readthedocs.io/en/stable/>`_"""
     parser = ArgumentParser(prog='QuickTile',
-        description='Window Tiling addon for X11-based desktops')
+        description='Add tiling hotkeys to X11-based desktops')
     parser.add_argument('-V', '--version', action='version',
             version="%%(prog)s v%s" % __version__)
     parser.add_argument('-d', '--daemonize', action="store_true",
@@ -200,12 +200,13 @@ def argparser() -> ArgumentParser:
         "keybindings using python-xlib and a D-Bus service using dbus-python. "
         "Exit if neither succeeds.")
     parser.add_argument('-b', '--bindkeys', action="store_true",
-        dest="daemonize", default=False, help="Old alias for --daemonize")
+        dest="daemonize", default=False, help="Old alias for --daemonize from "
+        "before it also did D-Bus")
     parser.add_argument('--debug', action="store_true", default=False,
         help="Display debug messages")
     parser.add_argument('--no-excepthook', action="store_true",
         default=False, help="Disable the error-handling dialog to allow for "
-        "use in unattended scripting.")
+        "more reliable use in unattended scripting")
     parser.add_argument('--no-workarea', action="store_true",
         default=False, help="No effect. Retained for compatibility.")
     parser.add_argument('command', action="store", nargs="*",
@@ -240,6 +241,27 @@ def main() -> None:
     # Set up the output verbosity
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO,
                         format='%(levelname)s: %(message)s')
+
+    if args.debug:
+        logging.debug("Starting QuickTile v{} on {} under Python v{}".format(
+            __version__,
+            os.environ.get('XDG_CURRENT_DESKTOP', '(unknown DE)').strip(),
+            platform.python_version()))
+
+        uname = platform.uname()
+        logging.debug("Host OS is {} {} {}".format(
+            uname.system, uname.release, uname.version))
+
+        if hasattr(platform, 'freedesktop_os_release'):  # pragma: no branch
+            try:
+                logging.debug("Host distro is {}".format(
+                    platform.freedesktop_os_release().get(
+                        'PRETTY_NAME', '(unknown)')))
+            except OSError:  # pragma: no cover
+                logging.debug("Couldn't identify host distro")
+
+        if 'WAYLAND_DISPLAY' in os.environ:
+            logging.warning("QuickTile appears to be running under Wayland")
 
     cfg_path = os.path.join(XDG_CONFIG_DIR, 'quicktile.cfg')
     first_run = not os.path.exists(cfg_path)

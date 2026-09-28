@@ -1,4 +1,7 @@
-0.4.1 (git HEAD):
+0.5.0 (git HEAD):
+- Add a releasing section to the Developer's Guide
+
+0.4.1:
 - Add support for HiDPI monitors where GDK's pixel units don't necessarily
   match Wnck pixel units by default.
 - Add minimal support for querying  _GTK_WORKAREAS_D0 (GNOME Shell on X11)
@@ -11,6 +14,7 @@
   pip cache files in the user's home directory.
 - Assorted documentation improvements.
 - Continued efforts to increase automated testing
+- Add "semi-automated" test helper as a stop-gap for easier pre-release testing
 - Significantly modernize project boilerplate to account for how long it's been
 
 0.4.0:
