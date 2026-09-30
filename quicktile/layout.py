@@ -205,16 +205,11 @@ def make_winsplit_positions(columns: int,
     gvlay = GravityLayout(margin_x, margin_y)
     col_width = 1.0 / columns
 
-    # (ported from the user's fork) nudge the centered positions when tiling
-    # in 3 columns to close the perceived gap in the middle.
-    offset = 0.01 if columns == 3 else 0
-    cycle_steps_center = tuple(round(col_width * x, 10) + offset
-                               for x in range(1, columns))
-    cycle_steps_edge = tuple(round(col_width * x, 10)
-                             for x in range(1, columns))
+    cycle_steps = tuple(round(col_width * x, 10)
+                        for x in range(1, columns))
 
-    center_steps = (1.0,) + cycle_steps_center
-    edge_steps = (0.5,) + cycle_steps_edge
+    center_steps = (1.0,) + cycle_steps
+    edge_steps = (0.5,) + cycle_steps
 
     positions = {
         'center': [gvlay(width, 1, 'center') for width in center_steps],
