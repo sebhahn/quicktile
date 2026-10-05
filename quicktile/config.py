@@ -24,6 +24,7 @@ DEFAULTS: Dict[str, CfgDict] = {
         'ColumnCount': 3,
         'MarginX_Percent': 0,
         'MarginY_Percent': 0,
+        'Spacing_Pixels': 0,
     },
     'keys': {
         "KP_Enter": "monitor-switch",

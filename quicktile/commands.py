@@ -294,6 +294,35 @@ def cycle_dimensions(winman: WindowManager,
                       "desktop. (overlapped a non-fullwidth panel?) Reducing "
                       "to within largest usable rectangle: %s", test_result)
 
+    # Apply a fixed pixel gap between tiled windows (Spacing_Pixels in the
+    # config). The gap is uniform everywhere: a full `Spacing_Pixels` at the
+    # monitor's left/right/top/bottom borders, and half on each side that
+    # borders a neighbouring window (so two adjacent tiles still add up to a
+    # full `Spacing_Pixels` gap between them). This is applied *after* the
+    # usable-region clipping so the gap also appears below/around any panels
+    # (eg. a top taskbar) rather than being swallowed by the clip.
+    spacing = state['config'].getint('general', 'Spacing_Pixels', fallback=0)
+    if spacing:
+        rel = dims[pos]  # monitor-relative rectangle, before absolute offset
+        tol = 1
+        on_left = rel.x <= tol
+        on_right = rel.x + rel.width >= monitor_rect.width - tol
+        on_top = rel.y <= tol
+        on_bottom = rel.y + rel.height >= monitor_rect.height - tol
+        l_ins = spacing if on_left else spacing // 2
+        r_ins = spacing if on_right else spacing // 2
+        t_ins = spacing if on_top else spacing // 2
+        b_ins = spacing if on_bottom else spacing // 2
+        result = result._replace(
+            x=result.x + l_ins,
+            y=result.y + t_ins,
+            width=result.width - l_ins - r_ins,
+            height=result.height - t_ins - b_ins)
+        # Guard against overly large spacing collapsing a window to nothing
+        result = result._replace(width=max(1, result.width),
+                                 height=max(1, result.height))
+        logging.debug("Applied %dpx spacing, result is now %s", spacing, result)
+
     logging.debug("Calling reposition() with default gravity and dimensions "
                   "%r", result)
     winman.reposition(win, result)

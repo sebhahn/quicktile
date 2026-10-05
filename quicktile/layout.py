@@ -52,11 +52,24 @@ def resolve_fractional_geom(fract_geom: Union[PercentRectTuple, Rectangle],
     if isinstance(fract_geom, Rectangle):
         return fract_geom
     else:
+        # Quantize *both* edges of the tile to the nearest integer before
+        # deriving the width/height. If each window's coordinates are truncated
+        # independently (via int() in Rectangle.__new__), adjacent tiles on a
+        # monitor whose width isn't an exact multiple of the tile fraction
+        # (eg. 1/3 of a 3440px-wide screen = 1146.666...) end up 1px out of
+        # alignment, producing visible gaps/overlaps between windows.
+        #
+        # Rounding the shared fractional boundary the same way for every window
+        # makes neighbouring tiles abut exactly on the pixel grid.
+        left = fract_geom[0] * monitor_rect.width
+        top = fract_geom[1] * monitor_rect.height
+        right = (fract_geom[0] + fract_geom[2]) * monitor_rect.width
+        bottom = (fract_geom[1] + fract_geom[3]) * monitor_rect.height
         return Rectangle(
-            x=fract_geom[0] * monitor_rect.width,
-            y=fract_geom[1] * monitor_rect.height,
-            width=fract_geom[2] * monitor_rect.width,
-            height=fract_geom[3] * monitor_rect.height)
+            x=round(left),
+            y=round(top),
+            width=round(right) - round(left),
+            height=round(bottom) - round(top))
 
 
 class GravityLayout(object):  # pylint: disable=too-few-public-methods

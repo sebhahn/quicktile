@@ -101,6 +101,33 @@ Margins will not be collapsed, so the gap between two windows will be 2% wide.
 considered too much work to fix when there are plans to rewrite the whole thing
 anyway.)
 
+.. _Spacing_Pixels:
+
+``Spacing_Pixels = 0``
+"""""""""""""""""""""""""""
+
+Unlike :ref:`MarginX_Percent <MarginX_Percent>` and
+:ref:`MarginY_Percent <MarginY_Percent>`, which are specified as a percentage
+of the monitor size, this adds a gap between tiled windows in **absolute
+pixels**. It is applied directly on the pixel grid after the proportional
+presets are resolved, so it produces the exact same gap regardless of the
+width/height the window ends up at.
+
+Each window is inset so the gap is uniform everywhere: a full
+``Spacing_Pixels`` at the monitor's left/right/top/bottom borders, and half on
+each side that borders a neighbouring window, so two adjacent tiled windows
+are separated by exactly ``Spacing_Pixels``.
+
+For example, setting ``Spacing_Pixels = 10`` will place a 10-pixel gap between
+adjacent windows as well as from each of the monitor's four edges. Unlike the
+percent margins, this is applied to both the horizontal and vertical
+directions. The percent margins and this pixel spacing are additive if both are
+non-zero.
+
+The spacing is measured from the *usable* area (ie. after any panels/taskbars
+are reserved), so it will also appear between a window and a top/bottom/side
+panel, not just at the monitor edges.
+
 .. _ModMask:
 
 ``ModMask = <Ctrl><Alt>``
